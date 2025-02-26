@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:pesistencia_dados/model/person.dart';
+import 'package:pesistencia_dados/services/hive.dart';
 import 'package:pesistencia_dados/services/sqflite.dart';
 
-void main() {
+Future<void> main() async { //Remove 'async' when testing sqflite
+  await HiveService.instance.init();
   runApp(const MyApp());
 }
 
@@ -31,7 +33,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   
-  final SqfliteService _sqfliteService = SqfliteService.instance;
+  //final SqfliteService _sqfliteService = SqfliteService.instance;
+  final HiveService _hiveService = HiveService.instance;
   String? _person = null;
 
   @override
@@ -64,9 +67,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 MaterialButton(
                   color: Theme.of(context).colorScheme.primary,
-                  onPressed: () {
+                  onPressed: () async { //Remove 'async' when testing sqflite
                     if (_person == null ||_person == "") return;
-                    _sqfliteService.addPerson(_person!);
+                    //_sqfliteService.addPerson(_person!);
+                    await _hiveService.addPerson(
+                      _person!
+                    );
                     setState(() {
                       _person = null;
                     });
@@ -91,21 +97,33 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _peopleList() {
-    return FutureBuilder(
-      future: _sqfliteService.getPeople(), 
-      builder: (context, snapshop) {
-        return ListView.builder(
-          itemCount: snapshop.data?.length ?? 0,
-          itemBuilder: (context, index) {
-            Person person = snapshop.data![index];
-            return ListTile(
-              title: Text(
-                person.name
-              ),
-            );
-          },
-        );
-      }
-    );
+    //=========SQFLite Service=========
+    // return FutureBuilder(
+    //   future: _sqfliteService.getPeople(), 
+    //   builder: (context, snapshop) {
+    //     return ListView.builder(
+    //       itemCount: snapshop.data?.length ?? 0,
+    //       itemBuilder: (context, index) {
+    //         Person person = snapshop.data![index];
+    //         return ListTile(
+    //           title: Text(
+    //             person.name
+    //           ),
+    //         );
+    //       },
+    //     );
+    //   }
+    // );
+    //=========Hive Service=========
+      final people = _hiveService.getPeople();
+      return ListView.builder(
+        itemCount: people.length,
+        itemBuilder: (context, index) {
+          final person = people[index];
+          return ListTile(
+            title: Text(person['name']),
+          );
+        },
+      );
   }
 }

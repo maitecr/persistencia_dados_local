@@ -7,15 +7,12 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 class SqfliteService {
   static Database? _db;
   
-  // Correção do padrão Singleton
   static final SqfliteService instance = SqfliteService._constructor();
   
   final String _peopleTableName = "people";
   final String _peopleIdColumn = "id";
   final String _peopleNameColumn = "name";
- // final String _peopleYearColumn = "year"; 
 
-  // Construtor privado para o Singleton
   SqfliteService._constructor() {
     databaseFactory = databaseFactoryFfi;
   }
