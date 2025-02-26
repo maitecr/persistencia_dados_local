@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:pesistencia_dados/model/person.dart';
 import 'package:pesistencia_dados/services/hive.dart';
 import 'package:pesistencia_dados/services/sqflite.dart';
+import 'package:pesistencia_dados/services/shared_preferences.dart';
 
 Future<void> main() async { //Remove 'async' when testing sqflite
-  await HiveService.instance.init();
+  //await HiveService.instance.init();
+  WidgetsFlutterBinding.ensureInitialized(); //Init shared preferences
   runApp(const MyApp());
 }
 
@@ -70,9 +72,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: () async { //Remove 'async' when testing sqflite
                     if (_person == null ||_person == "") return;
                     //_sqfliteService.addPerson(_person!);
-                    await _hiveService.addPerson(
-                      _person!
-                    );
+                    //await _hiveService.addPerson(_person!);
+                    final person = Person(id: DateTime.now().millisecondsSinceEpoch, name: _person!); 
+                    await SharedPreferencesService.instance.addPerson(person);
                     setState(() {
                       _person = null;
                     });
@@ -115,15 +117,36 @@ class _MyHomePageState extends State<MyHomePage> {
     //   }
     // );
     //=========Hive Service=========
-      final people = _hiveService.getPeople();
-      return ListView.builder(
-        itemCount: people.length,
-        itemBuilder: (context, index) {
-          final person = people[index];
-          return ListTile(
-            title: Text(person['name']),
-          );
-        },
-      );
+      // final people = _hiveService.getPeople();
+      // return ListView.builder(
+      //   itemCount: people.length,
+      //   itemBuilder: (context, index) {
+      //     final person = people[index];
+      //     return ListTile(
+      //       title: Text(person['name']),
+      //     );
+      //   },
+      // );
+      //=========Shared Preferences Service=========
+      return FutureBuilder<List<Person>>(
+      future: SharedPreferencesService.instance.getPeople(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final people = snapshot.data!;
+        return ListView.builder(
+          itemCount: people.length,
+          itemBuilder: (context, index) {
+            final person = people[index];
+            return ListTile(
+              title: Text(person.name),
+            );
+          },
+        );
+      },
+    );
+
   }
 }
